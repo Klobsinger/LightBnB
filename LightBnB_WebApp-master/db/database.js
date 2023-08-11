@@ -104,17 +104,84 @@ const getAllReservations = function (guest_id, limit = 10) {
  * @param {*} limit The number of results to return.
  * @return {Promise<[{}]>}  A promise to the properties.
  */
-const getAllProperties = (options, limit = 10) => {
- return pool
-    .query(`SELECT * FROM properties LIMIT $1`, [limit])
-    .then((result) => {
-      const rows = result.rows
-      return rows
-    })
-    .catch((err) => {
-      console.log(err.message);//move to routes
-    });
+const getAllProperties = function (options, limit = 10) {
+  const whereClauses = []; // Array for WhereClauses
+  const queryParams = []; // Array to store query parameters
+  const havingClauses = [] // Array for HavingClauses
+
+  //starting values for the query that will always be used no matter the filter
+  let query = `
+    SELECT properties.*, avg(property_reviews.rating) as average_rating
+    FROM properties
+    JOIN property_reviews ON properties.id = property_id
+  `;
+
+  // Build the WHERE clause and update queryParams
+  //Logic for city filtering
+  if (options.city) {
+    //Push the user-provided city to the queryParams array
+    queryParams.push(options.city);
+    //determining the parameter placeholder # based on how many Params are in the queryParams array
+    whereClauses.push(`city = $${queryParams.length}`);
+  }
+
+
+  //Logic for min price filtering
+  if (options.minimum_price_per_night) {
+    //multiplying the price the user inputs by 100 to convert to cents
+    const minimumPriceCents = options.minimum_price_per_night * 100;
+    //Push the user-provided minimum price to the queryParams array
+    queryParams.push(minimumPriceCents);
+    //determining the parameter placeholder # based on how many Params are in the queryParams array
+    whereClauses.push(`cost_per_night >= $${queryParams.length}`);
+  }
+
+  //Logic for max price filtering
+  if (options.maximum_price_per_night) {
+    //multiplying the price the user inputs by 100 to convert to cents
+    const maximumPriceCents = options.maximum_price_per_night * 100;
+    //Push the user-provided max price to the queryParams array
+    queryParams.push(maximumPriceCents);
+    //determining the parameter placeholder # based on how many Params are in the queryParams array
+    whereClauses.push(`cost_per_night <= $${queryParams.length}`);
+  }
+
+  //Logic for rating filtering
+  if(options.minimum_rating) {
+    // Push the user-provided minimum rating to the queryParams array
+    queryParams.push(options.minimum_rating);
+    //determining the parameter placeholder # based on how many Params are in the queryParams array
+    havingClauses.push(`AVG(property_reviews.rating) >= $${queryParams.length}`);
+  }
+  
+  if (whereClauses.length > 0) {
+    query += ' WHERE ';
+    query += whereClauses.join(" AND ");
+  }
+
+  query += `
+  GROUP BY properties.id
+  `;
+
+  if (havingClauses.length > 0) {
+    query += ' HAVING ';
+    query += havingClauses.join(" AND ");
+  }
+
+  queryParams.push(limit);
+  // Build the rest of the query
+  query += `
+    ORDER BY cost_per_night
+    LIMIT $${queryParams.length}`;
+
+    console.log("Generated Query:", query);
+    console.log("Query Parameters:", queryParams);
+    console.log("Having Clauses:", havingClauses);
+    console.log("Where Clauses:", whereClauses);
+
+    return pool.query(query, queryParams).then((res) => res.rows);
 };
+
 
 /**
  * Add a property to the database
