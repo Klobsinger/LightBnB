@@ -154,31 +154,33 @@ const getAllProperties = function (options, limit = 10) {
     havingClauses.push(`AVG(property_reviews.rating) >= $${queryParams.length}`);
   }
   
+  //checks the length of whereClauses array if user inputed any filtering that needs where clauses
   if (whereClauses.length > 0) {
+    //Adds one where to query
     query += ' WHERE ';
+    //joins all other additional where querys with AND
     query += whereClauses.join(" AND ");
   }
-
+  //adding GROUP BY before any havings are needed for propper grouping
   query += `
   GROUP BY properties.id
   `;
 
+    //checks the length of havingClauses array if user inputed any filtering that needs having clauses
   if (havingClauses.length > 0) {
+    //Adds one HAVING to query
     query += ' HAVING ';
+    //joins all other additional having querys with AND
     query += havingClauses.join(" AND ");
   }
-
+  //adds limit after everything else has been added
   queryParams.push(limit);
   // Build the rest of the query
   query += `
     ORDER BY cost_per_night
     LIMIT $${queryParams.length}`;
 
-    console.log("Generated Query:", query);
-    console.log("Query Parameters:", queryParams);
-    console.log("Having Clauses:", havingClauses);
-    console.log("Where Clauses:", whereClauses);
-
+    //Final Logic using the query built up step by step depending on user filtering choices and queryParams telling the query which placeholders to use
     return pool.query(query, queryParams).then((res) => res.rows);
 };
 
@@ -189,10 +191,19 @@ const getAllProperties = function (options, limit = 10) {
  * @return {Promise<{}>} A promise to the property.
  */
 const addProperty = function (property) {
-  const propertyId = Object.keys(properties).length + 1;
-  property.id = propertyId;
-  properties[propertyId] = property;
-  return Promise.resolve(property);
+  return pool
+    .query(
+      `INSERT INTO properties ("title", "description", "number_of_bedrooms", "number_of_bathrooms", "parking_spaces","cost_per_night","thumbnail_photo_url", "cover_photo_url", "street", "country", "city", "province", "post_code", "owner_id") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`,
+      [property.title, property.description, property.number_of_bedrooms, property.number_of_bathrooms, property.parking_spaces, property.cost_per_night, property.thumbnail_photo_url, property.cover_photo_url, property.street, property.country, property.city, property.province, property.post_code, property.owner_id]
+    )
+    .then((result) => {
+      const insertedProp = result.rows[0];
+      return insertedProp;
+    })
+    .catch((err) => {
+      console.log(err.message);//move to routes
+      throw err;
+    });
 };
 
 module.exports = {
