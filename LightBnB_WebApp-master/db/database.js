@@ -13,11 +13,11 @@ const getUserWithEmail = function (email) {
   return db.pool
     .query(`SELECT * FROM users WHERE users.email = $1 `, [email])
     .then((result) => {
-      const rows = result.rows
-      return rows[0]
+      const rows = result.rows;
+      return rows[0];
     })
     .catch((err) => {
-      console.log(err.message);//move to routes
+      console.log(err.message);
     });
 };
 
@@ -26,16 +26,16 @@ const getUserWithEmail = function (email) {
  * @param {string} id The id of the user.
  * @return {Promise<{}>} A promise to the user.
  */
-const getUserWithId = function (id) {
+const getUserWithId = function(id) {
   return db.pool
-  .query(`SELECT * FROM users WHERE users.id = $1 `, [id])
-  .then((result) => {
-    const rows = result.rows
-    return rows[0]
-  })
-  .catch((err) => {
-    console.log(err.message);//move to routes
-  });
+    .query(`SELECT * FROM users WHERE users.id = $1 `, [id])
+    .then((result) => {
+      const rows = result.rows;
+      return rows[0];
+    })
+    .catch((err) => {
+      console.log(err.message);
+    });
 };
 
 /**
@@ -43,7 +43,7 @@ const getUserWithId = function (id) {
  * @param {{name: string, password: string, email: string}} user
  * @return {Promise<{}>} A promise to the user.
  */
-const addUser = function (user) {
+const addUser = function(user) {
   return db.pool
     .query(
       `INSERT INTO users ("name", "email", "password") VALUES ($1, $2, $3) RETURNING *`,
@@ -54,7 +54,7 @@ const addUser = function (user) {
       return insertedUser;
     })
     .catch((err) => {
-      console.log(err.message);//move to routes
+      console.log(err.message);
       throw err;
     });
 };
@@ -66,7 +66,7 @@ const addUser = function (user) {
  * @param {string} guest_id The id of the user.
  * @return {Promise<[{}]>} A promise to the reservations.
  */
-const getAllReservations = function (guest_id, limit = 10) {
+const getAllReservations = function(guest_id, limit = 10) {
   return db.pool
     .query(
       `SELECT reservations.*, properties.*
@@ -97,10 +97,10 @@ const getAllReservations = function (guest_id, limit = 10) {
  * @param {*} limit The number of results to return.
  * @return {Promise<[{}]>}  A promise to the properties.
  */
-const getAllProperties = function (options, limit = 10) {
+const getAllProperties = function(options, limit = 10) {
   const whereClauses = []; // Array for WhereClauses
   const queryParams = []; // Array to store query parameters
-  const havingClauses = [] // Array for HavingClauses
+  const havingClauses = []; // Array for HavingClauses
 
   //starting values for the query that will always be used no matter the filter
   let query = `
@@ -140,7 +140,7 @@ const getAllProperties = function (options, limit = 10) {
   }
 
   //Logic for rating filtering
-  if(options.minimum_rating) {
+  if (options.minimum_rating) {
     // Push the user-provided minimum rating to the queryParams array
     queryParams.push(options.minimum_rating);
     //determining the parameter placeholder # based on how many Params are in the queryParams array
@@ -159,7 +159,7 @@ const getAllProperties = function (options, limit = 10) {
   GROUP BY properties.id
   `;
 
-    //checks the length of havingClauses array if user inputed any filtering that needs having clauses
+  //checks the length of havingClauses array if user inputed any filtering that needs having clauses
   if (havingClauses.length > 0) {
     //Adds one HAVING to query
     query += ' HAVING ';
@@ -173,8 +173,8 @@ const getAllProperties = function (options, limit = 10) {
     ORDER BY cost_per_night
     LIMIT $${queryParams.length}`;
 
-    //Final Logic using the query built up step by step depending on user filtering choices and queryParams telling the query which placeholders to use
-    return db.pool.query(query, queryParams).then((res) => res.rows);
+  //Final Logic using the query built up step by step depending on user filtering choices and queryParams telling the query which placeholders to use
+  return db.pool.query(query, queryParams).then((res) => res.rows);
 };
 
 
@@ -183,7 +183,7 @@ const getAllProperties = function (options, limit = 10) {
  * @param {{}} property An object containing all of the property details.
  * @return {Promise<{}>} A promise to the property.
  */
-const addProperty = function (property) {
+const addProperty = function(property) {
   return db.pool
     .query(
       `INSERT INTO properties ("title", "description", "number_of_bedrooms", "number_of_bathrooms", "parking_spaces","cost_per_night","thumbnail_photo_url", "cover_photo_url", "street", "country", "city", "province", "post_code", "owner_id") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`,
@@ -194,7 +194,7 @@ const addProperty = function (property) {
       return insertedProp;
     })
     .catch((err) => {
-      console.log(err.message);//move to routes
+      console.log(err.message);
       throw err;
     });
 };

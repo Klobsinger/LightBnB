@@ -10,10 +10,10 @@ const pool = new Pool({
 
 // Export the pool instance along with a query function that uses it
 module.exports = {
-    // The Pool instance for managing database connections
+  // The Pool instance for managing database connections
   pool,
 
-    // A function to execute queries using the pool
+  // A function to execute queries using the pool
   query: (text, params, callback) => {
     return pool.query(text, params, callback);
   }
