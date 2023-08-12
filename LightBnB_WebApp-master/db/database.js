@@ -1,13 +1,6 @@
 const properties = require("./json/properties.json");
 const users = require("./json/users.json");
-const { Pool } = require('pg');
-
-const pool = new Pool({
-  user: 'labber',
-  password: '123',
-  host: 'localhost',
-  database: 'lightbnb'
-});
+const db = require('../db'); // Import the exported object from db/index.js
 
 /// Users
 
@@ -17,7 +10,7 @@ const pool = new Pool({
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithEmail = function (email) {
-  return pool
+  return db.pool
     .query(`SELECT * FROM users WHERE users.email = $1 `, [email])
     .then((result) => {
       const rows = result.rows
@@ -34,7 +27,7 @@ const getUserWithEmail = function (email) {
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithId = function (id) {
-  return pool
+  return db.pool
   .query(`SELECT * FROM users WHERE users.id = $1 `, [id])
   .then((result) => {
     const rows = result.rows
@@ -51,7 +44,7 @@ const getUserWithId = function (id) {
  * @return {Promise<{}>} A promise to the user.
  */
 const addUser = function (user) {
-  return pool
+  return db.pool
     .query(
       `INSERT INTO users ("name", "email", "password") VALUES ($1, $2, $3) RETURNING *`,
       [user.name, user.email, user.password]
@@ -74,7 +67,7 @@ const addUser = function (user) {
  * @return {Promise<[{}]>} A promise to the reservations.
  */
 const getAllReservations = function (guest_id, limit = 10) {
-  return pool
+  return db.pool
     .query(
       `SELECT reservations.*, properties.*
       FROM reservations
@@ -181,7 +174,7 @@ const getAllProperties = function (options, limit = 10) {
     LIMIT $${queryParams.length}`;
 
     //Final Logic using the query built up step by step depending on user filtering choices and queryParams telling the query which placeholders to use
-    return pool.query(query, queryParams).then((res) => res.rows);
+    return db.pool.query(query, queryParams).then((res) => res.rows);
 };
 
 
@@ -191,7 +184,7 @@ const getAllProperties = function (options, limit = 10) {
  * @return {Promise<{}>} A promise to the property.
  */
 const addProperty = function (property) {
-  return pool
+  return db.pool
     .query(
       `INSERT INTO properties ("title", "description", "number_of_bedrooms", "number_of_bathrooms", "parking_spaces","cost_per_night","thumbnail_photo_url", "cover_photo_url", "street", "country", "city", "province", "post_code", "owner_id") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`,
       [property.title, property.description, property.number_of_bedrooms, property.number_of_bathrooms, property.parking_spaces, property.cost_per_night, property.thumbnail_photo_url, property.cover_photo_url, property.street, property.country, property.city, property.province, property.post_code, property.owner_id]
